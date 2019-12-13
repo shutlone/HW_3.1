@@ -10,30 +10,24 @@ using Microsoft.Extensions.Hosting;
 
 namespace HW_3._5
 {
-    public class RoutingMiddleware
+    public class ErrorHandlingMiddleware
     {
-        private readonly RequestDelegate _next;
-        public RoutingMiddleware(RequestDelegate next)
+        private RequestDelegate _next;
+        public ErrorHandlingMiddleware(RequestDelegate next)
         {
             _next = next;
         }
-
         public async Task InvokeAsync(HttpContext context)
         {
-            string path = context.Request.Path.Value.ToLower();
-            if (path == "/index")
+            await _next.Invoke(context);
+            if (context.Response.StatusCode == 403)
             {
-                await context.Response.WriteAsync("Home Page");
+                await context.Response.WriteAsync("Access Denied");
             }
-            else if (path == "/about")
+            else if (context.Response.StatusCode == 404)
             {
-                await context.Response.WriteAsync("About");
+                await context.Response.WriteAsync("Not Found");
             }
-            else
-            {
-                context.Response.StatusCode = 404;
-            }
-            //await _next.Invoke(context);
         }
     }
 
@@ -58,26 +52,34 @@ namespace HW_3._5
         }
     }
 
-    public class ErrorHandlingMiddleware
+    public class RoutingMiddleware
     {
-        private RequestDelegate _next;
-        public ErrorHandlingMiddleware(RequestDelegate next)
+        private readonly RequestDelegate _next;
+        public RoutingMiddleware(RequestDelegate next)
         {
             _next = next;
         }
+
         public async Task InvokeAsync(HttpContext context)
         {
+            string path = context.Request.Path.Value.ToLower();
+            if (path == "/index")
+            {
+                await context.Response.WriteAsync("Home Page");
+            }
+            else if (path == "/about")
+            {
+                await context.Response.WriteAsync("About");
+            }
+            else
+            {
+                context.Response.StatusCode = 404;
+            }
             await _next.Invoke(context);
-            if (context.Response.StatusCode == 403)
-            {
-                await context.Response.WriteAsync("Access Denied");
-            }
-            else if (context.Response.StatusCode == 404)
-            {
-                await context.Response.WriteAsync("Not Found");
-            }
         }
     }
+
+    
     public class Startup
     {
         // This method gets called by the runtime. Use this method to add services to the container.

@@ -21,8 +21,8 @@ namespace HW_3._3
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app)
         {
-            app.Map("/index", Index);
-            app.Map("/about", About);
+            app.Map("/formula1", form1);
+            app.Map("/formula2", form2);
 
             app.Run(async (context) =>
             {
@@ -30,7 +30,7 @@ namespace HW_3._3
             });
         }
 
-        private static void Index(IApplicationBuilder app)
+        private static void form1(IApplicationBuilder app)
         {
             app.Run(async context =>
             {
@@ -43,7 +43,7 @@ namespace HW_3._3
                 await context.Response.WriteAsync($"2^{x} * 3^{y} * 4^( sin( 1 / ({x} + 2) ) ) = {z}");
             });
         }
-        private static void About(IApplicationBuilder app)
+        private static void form2(IApplicationBuilder app)
         {
             app.Run(async context =>
             {

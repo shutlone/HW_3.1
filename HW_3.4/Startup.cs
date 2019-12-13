@@ -22,7 +22,7 @@ namespace HW_3._4
         public async Task InvokeAsync(HttpContext context)
         {
             var token = context.Request.Query["token"];
-            if (token != "12345678")
+            if (token != "yooooooo")
             {
                 context.Response.StatusCode = 403;
                 await context.Response.WriteAsync("Token is invalid");
