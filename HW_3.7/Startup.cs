@@ -4,72 +4,132 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Session;
+using Microsoft.AspNetCore.Http;
 
 namespace HW_3._7
 {
-    public class IMessageSender
+    public interface IMessageSender
     {
-        private readonly RequestDelegate _next;
-        private readonly string text;
+        string Send();
+    }
 
-        public IMessageSender(RequestDelegate next, string text)
+    public class MessageService
+    {
+        IMessageSender s;
+        public MessageService(IMessageSender sender)
         {
-            this._next = next;
-            this.text = text;
+            s = sender;
         }
-
-        public async Task InvokeAsync(HttpContext context)
+        public string Send()
         {
-            var token = context.Request.Query["token"];
-            if (token != "yooooooooo")
+            return s.Send();
+        }
+    }
+
+    //public class SmsMessageSender : IMessageSender
+    //{
+    //    private string text;
+    //    public SmsMessageSender(HttpContext context)
+    //    {
+    //        text = context.Request.Cookies["text"];
+    //        if (text.Length != 0)
+    //        {
+    //            context.Response.Cookies.Append("text", "Тут лежит пажилой текст");
+    //        }
+    //    }
+
+    //    public string Send()
+    //    {
+    //        if (text.Length != 0)
+    //        {
+    //            return "text empty";
+    //        }
+    //        return text;
+    //    }
+    //}
+
+
+
+    public class EmailMessageSender : IMessageSender
+    {
+        private string text;
+        public EmailMessageSender(HttpContext context)
+        {
+            text = context.Session.GetString("text");
+            if (text == null)
             {
-                context.Response.StatusCode = 403;
-                await context.Response.WriteAsync("Token is invalid");
-            }
-            else
-            {
-                
-                await _next.Invoke(context);
+                context.Session.SetString("text", "Тут лежит пажилой текст");
             }
         }
-
-        public async Task EmailMessageSender(HttpContext context, string text)
+        public string Send()
         {
-            if (this.text.Length != 0)
-                await context.Response.WriteAsync(this.text);
-            else
-                await context.Response.WriteAsync("Text is empty");
+            if (text == null)
+            {
+                return "text empty";
+            }
+            return text;
         }
-
     }
     public class Startup
     {
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public IConfiguration Configuration { get; }
+
         // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddControllersWithViews();
+            services.AddDistributedMemoryCache();
+            services.AddSession();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            app.UseSession();
+
+            app.Map("/Email", Email);
+            //app.Map("/SMS", SMS);
+
+            app.UseHttpsRedirection();
 
             app.UseRouting();
 
+            app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Hello World!");
-                });
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
             });
         }
+
+        private void Email(IApplicationBuilder app)
+        {
+            app.Run(async (context) =>
+            {
+                var m = new MessageService(new EmailMessageSender(context));
+                await context.Response.WriteAsync(m.Send());
+            });
+        }
+
+        //private void SMS(IApplicationBuilder app)
+        //{
+        //    app.Run(async (context) =>
+        //    {
+        //        var m = new MessageService(new SmsMessageSender(context));
+        //        await context.Response.WriteAsync(m.Send());
+        //    });
+        //}
     }
 }
