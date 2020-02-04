@@ -1,0 +1,226 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Список авто</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.0/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <h2>Список авто</h2>
+    <div id="errors" class="alert alert-danger" style="display:none;"></div>
+    <form name="carForm">
+        <input type="hidden" name="id" value="0" />
+        <div class="form-group col-md-5">
+            <label for="name">Название:</label>
+            <input class="form-control" name="name" />
+        </div>
+        <div class="form-group col-md-5">
+            <label for="power">Мощность:</label>
+            <input class="form-control" name="power" type="number" />
+        </div>
+        <div class="panel-body">
+            <button type="submit" id="submit" class="btn btn-primary ">Сохранить</button>
+            <a id="reset" class="btn ">Сбросить</a>
+        </div>
+    </form>
+    <table class="table table-condensed table-striped">
+        <thead><tr><th>Id</th><th>Название</th><th>Мощность</th><th></th></tr></thead>
+        <tbody>
+        </tbody>
+    </table>
+    <div>2019 © Metanit.com</div>
+    <script>
+        // Получение всех пользователей
+        async function GetCars() {
+            // отправляет запрос и получаем ответ
+            const response = await fetch("/api/cars", {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            // если запрос прошел нормально
+            if (response.ok === true) {
+                // получаем данные
+                const cars = await response.json();
+                let rows = document.querySelector("tbody");
+                cars.forEach(car => {
+                    // добавляем полученные элементы в таблицу
+                    rows.append(row(car));
+                });
+            }
+        }
+        // Получение одного пользователя
+        async function GetCar(id) {
+            const response = await fetch("/api/cars/" + id, {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                const car = await response.json();
+                const form = document.forms["carForm"];
+                form.elements["id"].value = car.id;
+                form.elements["name"].value = car.name;
+                form.elements["power"].value = car.power;
+            }
+        }
+        // Добавление пользователя
+        async function CreateCar(carName, carPower) {
+
+            const response = await fetch("api/cars", {
+                method: "POST",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: carName,
+                    power: parseInt(carPower, 10)
+                })
+            });
+            if (response.ok === true) {
+                const car = await response.json();
+                reset();
+                document.querySelector("tbody").append(row(car));
+            }
+            else {
+                const errorData = await response.json();
+                console.log("errors", errorData);
+                if (errorData) {
+                    // ошибки вследствие валидации по атрибутам
+                    if (errorData.errors) {
+                        if (errorData.errors["Name"]) {
+                            addError(errorData.errors["Name"]);
+                        }
+                        if (errorData.errors["Power"]) {
+                            addError(errorData.errors["Power"]);
+                        }
+                    }
+                    // кастомные ошибки, определенные в контроллере
+                    // добавляем ошибки свойства Name
+                    if (errorData["Name"]) {
+                        addError(errorData["Name"]);
+                    }
+
+                    // добавляем ошибки свойства Power
+                    if (errorData["Power"]) {
+                        addError(errorData["Power"]);
+                    }
+                }
+
+                document.getElementById("errors").style.display = "block";
+            }
+        }
+        // Изменение пользователя
+        async function EditCar(carId, carName, carPower) {
+            const response = await fetch("api/cars", {
+                method: "PUT",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: parseInt(carId, 10),
+                    name: carName,
+                    power: parseInt(carPower, 10)
+                })
+            });
+            if (response.ok === true) {
+                const car = await response.json();
+                reset();
+                document.querySelector("tr[data-rowid='" + car.id + "']").replaceWith(row(car));
+            }
+        }
+        // Удаление пользователя
+        async function DeleteCar(id) {
+            const response = await fetch("/api/cars/" + id, {
+                method: "DELETE",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                const car = await response.json();
+                document.querySelector("tr[data-rowid='" + car.id + "']").remove();
+            }
+        }
+
+        // сброс формы
+        function reset() {
+            const form = document.forms["carForm"];
+            form.reset();
+            form.elements["id"].value = 0;
+        }
+        function addError(errors) {
+            errors.forEach(error => {
+                const p = document.createElement("p");
+                p.append(error);
+                document.getElementById("errors").append(p);
+            });
+        }
+        // создание строки для таблицы
+        function row(car) {
+
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-rowid", car.id);
+
+            const idTd = document.createElement("td");
+            idTd.append(car.id);
+            tr.append(idTd);
+
+            const nameTd = document.createElement("td");
+            nameTd.append(car.name);
+            tr.append(nameTd);
+
+            const powerTd = document.createElement("td");
+            powerTd.append(car.power);
+            tr.append(powerTd);
+
+            const linksTd = document.createElement("td");
+
+            const editLink = document.createElement("a");
+            editLink.setAttribute("data-id", car.id);
+            editLink.setAttribute("style", "cursor:pointer;padding:15px;");
+            editLink.append("Изменить");
+            editLink.addEventListener("click", e => {
+
+                e.preventDefault();
+                GetCar(car.id);
+            });
+            linksTd.append(editLink);
+
+            const removeLink = document.createElement("a");
+            removeLink.setAttribute("data-id", car.id);
+            removeLink.setAttribute("style", "cursor:pointer;padding:15px;");
+            removeLink.append("Удалить");
+            removeLink.addEventListener("click", e => {
+
+                e.preventDefault();
+                DeleteCar(car.id);
+            });
+
+            linksTd.append(removeLink);
+            tr.appendChild(linksTd);
+
+            return tr;
+        }
+        // сброс значений формы
+        document.getElementById("reset").addEventListener("click", function (e) {
+
+            e.preventDefault();
+            reset();
+        })
+
+        // отправка формы
+        document.forms["carForm"].addEventListener("submit", e => {
+            e.preventDefault();
+            document.getElementById("errors").innerHTML = "";
+            document.getElementById("errors").style.display = "none";
+
+            const form = document.forms["carForm"];
+            const id = form.elements["id"].value;
+            const name = form.elements["name"].value;
+            const power = form.elements["power"].value;
+            if (id == 0)
+                CreateCar(name, power);
+            else
+                EditCar(id, name, power);
+        });
+
+        // загрузка пользователей
+        GetCars();
+
+    </script>
+</body>
+</html>

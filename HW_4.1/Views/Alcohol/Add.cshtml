@@ -1,0 +1,28 @@
+﻿
+@{
+    ViewData["Title"] = "Добавить";
+}
+@model Alcohol
+<h1>Добавить</h1>
+
+<form method="post">
+    @Html.HiddenFor(a => a.Id)
+    <p>
+        @Html.LabelFor(a => a.Type, "Тип")
+        <br />
+        @Html.EditorFor(a => a.Type)
+        <br />
+        @Html.LabelFor(a => a.Brand, "Бренд")
+        <br />
+        @Html.EditorFor(a => a.Brand)
+        <br />
+        @Html.LabelFor(a => a.Volume, "Объем")
+        <br />
+        @Html.EditorFor(a => a.Volume)
+        <br />
+        @Html.LabelFor(a => a.Strength, "Крепость")
+        <br />
+        @Html.EditorFor(a => a.Strength)
+    </p>
+    <p><input type="submit" value="Отправить" /></p>
+</form>

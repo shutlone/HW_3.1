@@ -39,7 +39,7 @@ namespace HW_3._7
     //        text = context.Request.Cookies["text"];
     //        if (text.Length != 0)
     //        {
-    //            context.Response.Cookies.Append("text", "Тут лежит пажилой текст");
+    //            context.Response.Cookies.Append("text", "Тут лежит текст");
     //        }
     //    }
 
@@ -63,7 +63,7 @@ namespace HW_3._7
             text = context.Session.GetString("text");
             if (text == null)
             {
-                context.Session.SetString("text", "Тут лежит пажилой текст");
+                context.Session.SetString("text", "Тут текст");
             }
         }
         public string Send()

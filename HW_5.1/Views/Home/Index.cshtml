@@ -1,0 +1,116 @@
+﻿@using _5._0_ViewModel.Models
+
+@model IndexViewModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+<style>
+
+    @@font-face {
+        font-family: 'FontAwesome';
+        src: url('https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/fonts/fontawesome-webfont.woff2') format('woff2'), url('https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/fonts/fontawesome-webfont.woff') format('woff'), url('https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/fonts/fontawesome-webfont.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal
+    }
+
+    .glyphicon {
+        display: inline-block;
+        font: normal normal normal 14px/1 FontAwesome;
+        font-size: inherit;
+        text-rendering: auto;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale
+    }
+
+    .glyphicon-chevron-right:before {
+        content: "\f054";
+    }
+
+    .glyphicon-chevron-left:before {
+        content: "\f053";
+    }
+</style>
+<h1>Список алкоголя</h1>
+<form method="get">
+    <div class="form-inline">
+        <label>Имя</label>
+        <input name="name" value="@Model.FilterViewModel.SelectedBrand" class="form-control" />
+
+        <label>Музыка</label>
+        <select name="music" asp-items="Model.FilterViewModel.Music" class="form-control"></select>
+
+        <input type="submit" value="Фильтрация" class="btn btn-outline-dark" />
+    </div>
+</form>
+<table class="table">
+    <tr>
+        <th>
+            <a asp-action="Index"
+               asp-route-sortOrder="@(Model.SortViewModel.NameSort)"
+               asp-route-name="@(Model.FilterViewModel.SelectedBrand)"
+               asp-route-company="@(Model.FilterViewModel.SelectedAlc)">Бренд</a>
+        </th>
+        <th>
+            Тип
+        </th>
+        <th>
+            <a asp-action="Index" asp-route-sortOrder="@(Model.SortViewModel.StrenghtSort)"
+               asp-route-name="@(Model.FilterViewModel.SelectedBrand)"
+               asp-route-company="@(Model.FilterViewModel.SelectedAlc)">Крепость</a>
+        </th>
+        <th>
+            <a asp-action="Index" asp-route-sortOrder="@(Model.SortViewModel.MusicSort)"
+               asp-route-name="@(Model.FilterViewModel.SelectedBrand)"
+               asp-route-company="@(Model.FilterViewModel.SelectedAlc)">Музыка</a>
+        </th>
+        <th>
+            <a>Дни</a>
+        </th>
+        <th>
+            <a>Часы</a>
+        </th>
+        <th>
+            <a>Минуты</a>
+        </th>
+        
+    </tr>
+    <p>
+        <a asp-action="Add">Добавить</a>
+    </p>
+    @foreach (Alcohol a in Model.Alcohols)
+    {
+        <tr>
+            <td>@a.Brand</td>
+            <td>@a.Type</td>
+            <td>@a.Strength</td>
+            <td>@a.Music.Executor</td>
+            <td>@a.LifeTime.Days</td>
+            <td>@a.LifeTime.Hours</td>
+            <td>@a.LifeTime.Minutes</td>
+        </tr>
+    }
+</table>
+@if (Model.PageViewModel.HasPreviousPage)
+{
+    <a asp-action="Index"
+       asp-route-page="@(Model.PageViewModel.PageNumber - 1)"
+       asp-route-name="@(Model.FilterViewModel.SelectedBrand)"
+       asp-route-company="@(Model.FilterViewModel.SelectedAlc)"
+       asp-route-sortorder="@(Model.SortViewModel.Current)"
+       class="btn  btn-outline-dark">
+        <i class="glyphicon glyphicon-chevron-left"></i>
+        Назад
+    </a>
+}
+@if (Model.PageViewModel.HasNextPage)
+{
+    <a asp-action="Index"
+       asp-route-page="@(Model.PageViewModel.PageNumber + 1)"
+       asp-route-name="@(Model.FilterViewModel.SelectedBrand)"
+       asp-route-company="@(Model.FilterViewModel.SelectedAlc)"
+       asp-route-sortorder="@(Model.SortViewModel.Current)"
+       class="btn btn-outline-dark">
+        Вперед
+        <i class="glyphicon glyphicon-chevron-right"></i>
+    </a>
+}
